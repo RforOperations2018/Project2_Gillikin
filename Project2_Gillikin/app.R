@@ -99,26 +99,29 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output, session = session) {
- # loadtrees <- reactive({
-#    # inputs 
-#    types_filter <- ifelse(length(input$name_select) > 0, 
-#                           paste0("%20AND%20%22common_name%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
-#                           "")
+  loadtrees <- reactive({
+    # inputs 
+    #types_filter <- ifelse(length(input$name_select) > 0, 
+    #                       paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
+    #                       "")
     # Build API Query with proper encodes
-#    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27", types_filter)
-    
+    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20
+                  WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27%20
+                  AND%20%22neighborhood%22%20=%20%27", input$name_select, "%27%20
+                  AND%20%22condition%22%20=%20%27", input$condition_select, "%27")
+    print(url)
     # Load and clean data
-#    trees <- ckanSQL(url)
-#    return(trees)
+#    loadtrees <- ckanSQL(url)
+#    return(loadtrees)
 
- # })
+  })
   output$map <- renderLeaflet({
   #  trees <- loadtrees()
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
                        options = providerTileOptions(noWrap = TRUE)) #%>%
  #     addPolygons(data = neighborhoods) %>%
- #     addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
+ #     addCircleMarkers(data = loadtrees(), lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
   })  
   
   output$barChart1 <- renderPlotly({
@@ -140,7 +143,7 @@ server <- function(input, output, session = session) {
 #  })
   # Datatable
   output$table <- DT::renderDataTable({
-    subset(loadAccount(), select = c("neighborhood", "common_name", "condition"))
+    subset(loadtrees(), select = c(neighborhood, common_name, condition))
   })
   # Reset Selection of Data
   observeEvent(input$reset, {
@@ -153,7 +156,7 @@ server <- function(input, output, session = session) {
       paste("trees-", Sys.Date(), ".csv", sep="")
     },
     content = function(file) {
-      write.csv(loadAccount(), file)
+      write.csv(loadtrees(), file)
     })
 }
 
