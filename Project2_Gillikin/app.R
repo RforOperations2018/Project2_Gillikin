@@ -31,7 +31,8 @@ ckanUniques <- function(id, field) {
   c(ckanSQL(URLencode(url)))
 }
 
-violations <- sort(ckanUniques("1a1329e2-418c-4bd3-af2c-cc334e7559af", "REQUEST_TYPE")$REQUEST_TYPE)
+trees <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "common_name")$common_name)
+neighborhood <- sort(ckanUnique("8d76ac6b-5ae8-4428-82a4-043130d17b02", "neighborhood")$neighborhood)
 
 # Define UI for application
 ui <- fluidPage(
