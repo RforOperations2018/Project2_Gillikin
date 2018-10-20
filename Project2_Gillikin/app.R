@@ -31,7 +31,7 @@ ckanUniques <- function(id, field) {
   c(ckanSQL(URLencode(url)))
 }
 
-common_names <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "common_name")$common_name)
+commonNames <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "common_name")$common_name)
 #neighborhood <- sort(ckanUnique("8d76ac6b-5ae8-4428-82a4-043130d17b02", "neighborhood")$neighborhood)
 
 # Define UI for application
@@ -45,10 +45,10 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("name_select",
                   "Tree Name",
-                  choices = sort(unique(common_names)),
+                  choices = sort(unique(commonNames)),
                   multiple = TRUE, 
                   selectize = TRUE,
-                  selected = c("Maple: Red", "Lilac: Japanese Tree")),
+                  selected = c("Maple: Red")),
 #      selectInput("condition_select",
 #                  "Condition",
 #                  choices = sort(unique(condition)),
@@ -61,11 +61,9 @@ ui <- fluidPage(
 #                  selected = "Greenfield",
 #                  multiple = TRUE,
 #                  selectize = TRUE),
-#      sliderInput("height_select",
-#                  "Height",
-#                  choices = height,
-#                  selected = "Fair",
-#                  multiple = TRUE),
+      sliderInput("height_select",
+                  "Height",
+                  min = 0, max = 100, value = 50),
       actionButton("click", "Refresh")
       
     ),
@@ -94,23 +92,23 @@ ui <- fluidPage(
 server <- function(input, output, session = session) {
   loadtrees <- reactive({
     # inputs 
-    name_select <- ifelse(length(input$common_name) > 0, 
-                           paste0("%20AND%20%22common_name%22%20IN%20(%27", paste(input$common_name, collapse = "%27,%27"),"%27)"),
+    types_filter <- ifelse(length(input$name_select) > 0, 
+                           paste0("%20AND%20%22common_name%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
                            "")
     # Build API Query with proper encodes
-    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22common_name%22%20%3E=%20%27", input$name_select, "%27")
+    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27", types_filter)
     
     # Load and clean data
-    loadtrees <- ckanSQL(url)
-    return(loadtrees)
-    
-    trees <- loadtrees()
+    trees <- ckanSQL(url)
+    return(trees)
+
   })
   output$map <- renderLeaflet({
+    trees <- loadtrees()
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
-                       options = providerTileOptions(noWrap = TRUE)) #%>%
-   #   addCircleMarkers(data = common_names, lng = ~longitude, lat = ~latitude, radius = ~ifelse(type == "single", 4, 8), stroke = FALSE, fillOpacity = .75)
+                       options = providerTileOptions(noWrap = TRUE)) %>%
+      addCircleMarkers(data = trees, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
   })  
   
   output$barChart1 <- renderPlotly({
@@ -132,17 +130,17 @@ server <- function(input, output, session = session) {
 #  })
   # Datatable
   output$table <- DT::renderDataTable({
-    subset(loadAccount(), select = c(common_name))
+    subset(loadAccount(), select = c("common_name"))
   })
   # Reset Selection of Data
   observeEvent(input$reset, {
-    updateSelectInput(session, "common_name", selected = c("Maple: Red"))
+    updateSelectInput(session, "name_select", selected = c("Maple: Red"))
     showNotification("Loading...", type = "message")
   })
   # Download data in the datatable
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste("revenue.expenses-", Sys.Date(), ".csv", sep="")
+      paste("trees-", Sys.Date(), ".csv", sep="")
     },
     content = function(file) {
       write.csv(loadAccount(), file)
