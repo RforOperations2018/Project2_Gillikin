@@ -43,27 +43,7 @@ ui <- fluidPage(
   # Sidebar
   sidebarLayout(
     sidebarPanel(
-      selectInput("name_select",
-                  "Common Name",
-                  choices = common_name,
-                  selected = "Maple: Red",
-                  multiple = TRUE),
-      selectInput("condition_select",
-                  "Condition",
-                  choices = condition_select,
-                  selected = "Fair",
-                  multiple = TRUE),
-      selectInput("neighborhood_select",
-                  "Condition",
-                  choices = neighborhood_select,
-                  selected = "Greenfield",
-                  multiple = TRUE),
-      sliderInput("height_select",
-                  "Height",
-                  choices = height_select,
-                  selected = "Fair",
-                  multiple = TRUE),
-      actionButton("click", "Refresh")
+
       
     ),
     
@@ -91,9 +71,9 @@ ui <- fluidPage(
 server <- function(input, output, session = session) {
   loadtrees <- reactive({
     # inputs 
-    types_filter <- ifelse(length(input$neighborhood) > 0, 
-                           paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$neighborhood, collapse = "%27,%27"),"%27)"),
-                           "")
+    #types_filter <- ifelse(length(input$neighborhood) > 0, 
+    #                       paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$neighborhood, collapse = "%27,%27"),"%27)"),
+    #                       "")
     # Build API Query with proper encodes
     url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22common_name%22%20%3E=%20%27", input$name_select, "%27")
     
@@ -115,35 +95,30 @@ server <- function(input, output, session = session) {
       addCircleMarkers(data = trees, lng = ~longitude, lat = ~latitude, radius = ~ifelse(type == "single", 4, 8), stroke = FALSE, fillOpacity = .75)
   })  
   
-  output$barPlot <- renderPlotly({
-    dat <- cvl.house()
+  output$barChart1 <- renderPlotly({
+    dat <- loadtrees()
     ggplotly(
-      ggplot(data = dat, aes(x = neighborhood, y = subsidizedUnits)) + 
-        geom_col(fill = "#8E5572") +
-        labs(title="Six neighborhoods account for 83% of subsidized units", x = "", y="Number of Units") +
+      ggplot(data = dat, aes(x = common_name)) + 
+        geom_bar(fill = "#8E5572") +
+        labs(title="Six Six Seven") +
         theme_light() +
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
-      , tooltip = "subsidizedUnits")
+      , tooltip = "")
   })
-  output$lineChart <- renderPlotly({
-    dat311 <- load311()
-    
-    # shape the data for chart
-    table <- dat311 %>%
-      group_by(STATUS) %>%
-      summarise(count = n())
-    
-    # draw plot
-    ggplot(table, aes(x = STATUS, y = count, fill = STATUS)) +
-      geom_bar(stat = "identity")
-  })
+#  output$lineChart <- renderPlotly({
+#    trees <- loadtrees()
+#    
+#    # draw plot
+#    ggplot(table, aes(x = STATUS, y = count, fill = STATUS)) +
+#      geom_bar(stat = "identity")
+#  })
   # Datatable
   output$table <- DT::renderDataTable({
-    subset(loadAccount(), select = c(department_name, general_ledger_date, object_account_description, amount))
+    subset(loadAccount(), select = c(common_name))
   })
   # Reset Selection of Data
   observeEvent(input$reset, {
-    updateSelectInput(session, "department_select", selected = c("DPW-Operations"))
+    updateSelectInput(session, "common_name", selected = c("Maple: Red"))
     showNotification("Loading...", type = "message")
   })
   # Download data in the datatable
