@@ -18,7 +18,7 @@ library(shinydashboard)
 treeTops <- read.csv("trees.csv")
 
 # Load PGH neighborhood shapefile
-#neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
+neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
 
 
 #ckanSQL <- function(url) {
@@ -96,6 +96,9 @@ body <- dashboardBody(tabItems(
   ),
   tabItem("table",
           fluidPage(
+            inputPanel(
+              downloadButton("downloaddata","Download Data")
+            ),
             box(title = "Selected Stats", DT::dataTableOutput("table"), width = 12))
   )
         )
@@ -125,7 +128,7 @@ server <- function(input, output, session = session) {
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
                        options = providerTileOptions(noWrap = TRUE)) #%>%
- #     addPolygons(data = neighborhoods) %>%
+      addPolygons(data = neighborhoods) %>%
       addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
   })  
   
@@ -149,24 +152,25 @@ server <- function(input, output, session = session) {
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
       , tooltip = "")
   })
-  # Datatable
-  output$table <- DT::renderDataTable({
-    subset(treeTops, select = c(neighborhood, common_name, condition))
-  })
   # Reset Selection of Data
  # observeEvent(input$reset, {
   #  updateSelectInput(session, "name_select", selected = c("Greenfield"))
 #    showNotification("Loading...", type = "message")
 #  })
-  # Download data in the datatable
-#  output$downloadData <- downloadHandler(
-#    filename = function() {
-#      paste("trees-", Sys.Date(), ".csv", sep="")
-#    },
-#    content = function(file) {
-#      write.csv(loadtrees(), file)
-#    })
+  # Datatable
+  output$table <- DT::renderDataTable({
+    subset(treeTops, select = c("neighborhood", "common_name", "condition"))
+  })
+#   Download data in the datatable
+  output$downloaddata<-downloadHandler(
+    filename = function(){
+      paste("PGHTrees",Sys.Date(),".csv",sep="")
+  },
+    content=function(file){
+      write.csv(treeTops,file)
+  })
 }
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
