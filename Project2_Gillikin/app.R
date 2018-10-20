@@ -43,12 +43,12 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       dateRangeInput("date",
-                     "Inspection Dates Range",
+                     "Inspection Date Range",
                      start = Sys.Date()-30,
                      end = Sys.Date()),
 
       checkboxGroupInput("type", "Violation Type", 
-                         choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3),
+                         choices = list(" Low risk violation" = 1, " Medium risk violation" = 2, " High risk violation" = 3),
                          selected = 1)
     ),
     
@@ -59,7 +59,7 @@ ui <- fluidPage(
                  leafletOutput("map")),
         tabPanel("Municiple",
                  plotlyOutput("barChart")),
-        tabPanel("Over time",
+        tabPanel("Violations over time",
                  plotlyOutput("linePlot")),
         tabPanel("Table",
                  inputPanel(
