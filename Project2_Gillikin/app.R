@@ -19,7 +19,7 @@ treeTops <- read.csv("trees.csv")
 
 # Load PGH neighborhood shapefile
 neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
-
+palet <- colorFactor(topo.colors(5), treeTops$common_names)
 
 #ckanSQL <- function(url) {
 #  # Make the Request
@@ -58,27 +58,26 @@ sidebar <- dashboardSidebar(
                 multiple = TRUE, 
                 selectize = TRUE,
                 selected = c("Greenfield")),
-      selectInput("condition_select",
+    selectInput("condition_select",
                   "Tree Condition",
-                  choices = sort(unique(treeTops$condition)),
-                  multiple = TRUE, 
-                  selectize = TRUE,
-                  selected = c("Fair")),
-      selectInput("name_select",
-                  "Common Name",
-                  choices = sort(unique(treeTops$common_name)),
-                  selected = "Maple: Red",
-                  multiple = TRUE,
-                  selectize = TRUE),
-#      sliderInput("height_select",
-#                  "Height",
-#                  min = min(treeTops$height),
-#                  max = max(treeTops$height),
-#                  value = c(min(treeTops$height), max(treeTops$height))),
-      hr(),
-      actionButton("reset", "Reset Selection", icon = icon("refresh"))
-      
-    )
+                choices = sort(unique(treeTops$condition)),
+                multiple = TRUE, 
+                selectize = TRUE,
+                selected = c("Fair")),
+    selectInput("name_select",
+                "Common Name",
+                choices = sort(unique(treeTops$common_name)),
+                selected = "Maple: Red",
+                multiple = TRUE,
+                selectize = TRUE),
+    sliderInput("height_select",
+                "Height",
+                min = 0,
+                max = max(na.omit(treeTops$height)),
+                value = c(0, max(na.omit(treeTops$height)))),
+    hr(),
+    actionButton("reset", "Reset Selection", icon = icon("refresh"))
+  )
 )
 
 body <- dashboardBody(tabItems(
@@ -101,9 +100,9 @@ body <- dashboardBody(tabItems(
               downloadButton("downloaddata","Download Data")
             ),
             box("Selected Statistics", DT::dataTableOutput("table"), width = 12))
-  )
         )
   )
+)
 
 ui <- dashboardPage(header, sidebar, body)
 
@@ -135,7 +134,7 @@ server <- function(input, output, session = session) {
                     weight = 4, 
                     color = "#545455", 
                     bringToFront = TRUE)) %>%
-      addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75, color = "darkgreen", label = ~common_name)
+      addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75, color = ~palet(common_name), label = ~common_name)
   })  
   
   output$barChart1 <- renderPlotly({
@@ -163,6 +162,7 @@ server <- function(input, output, session = session) {
     updateSelectInput(session, "neighborhood_select", selected = "Greenfield")
     updateSelectInput(session, "condition_select", selected = "Fair")
     updateSelectInput(session, "name_select", selected = "Maple: Red")
+    updateSliderInput(session, "height_select", value = c(0, max(na.omit(treeTops$height))))
     showNotification("Loading...", type = "message")
   })
   # Datatable
@@ -178,7 +178,6 @@ server <- function(input, output, session = session) {
       write.csv(treeTops,file)
   })
 }
-
 
 # Run the application 
 shinyApp(ui = ui, server = server)
