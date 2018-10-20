@@ -31,13 +31,13 @@ ckanUniques <- function(id, field) {
   c(ckanSQL(URLencode(url)))
 }
 
-types <- sort(ckanUniques("76fda9d0-69be-4dd5-8108-0de7907fc5a4", "REQUEST_TYPE")$REQUEST_TYPE)
+violations <- sort(ckanUniques("1a1329e2-418c-4bd3-af2c-cc334e7559af", "REQUEST_TYPE")$REQUEST_TYPE)
 
 # Define UI for application
 ui <- fluidPage(
   
   # Application title
-  titlePanel("City of Pittsburgh 311 Dashboard"),
+  titlePanel("Pittsburgh Restaurant Inspection Violations"),
   
   # Sidebar
   sidebarLayout(
@@ -65,7 +65,7 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel("Map",
                  leafletOutput("map")),
-        tabPanel("By Ward",
+        tabPanel("Municiple",
                  plotlyOutput("barChart"),
         tabPanel("Over time",
                  plotlyOutput("linePlot")),
@@ -73,7 +73,7 @@ ui <- fluidPage(
                  inputPanel(
                    downloadButton("downloadData","Download Revenue/Expense Data")
                  ),
-                 fluidPage(DT::dataTableOutput("table"))
+                 fluidPage(DT::dataTableOutput("table")))
         )
       )
     )
