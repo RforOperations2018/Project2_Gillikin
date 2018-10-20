@@ -42,22 +42,14 @@ ui <- fluidPage(
   # Sidebar
   sidebarLayout(
     sidebarPanel(
-      dateRangeInput("dates",
-                     "Select Dates",
+      dateRangeInput("date",
+                     "Inspection Dates Range",
                      start = Sys.Date()-30,
                      end = Sys.Date()),
-      selectInput("type_select",
-                  "Request Type",
-                  choices = types,
-                  selected = "Potholes"),
-      selectInput("type_select2",
-                  "Request Type",
-                  choices = types,
-                  selected = "Potholes"),
-      selectInput("type_select3",
-                  "Request Type",
-                  choices = types,
-                  selected = "Potholes")
+
+      checkboxGroupInput("type", "Violation Type", 
+                         choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3),
+                         selected = 1)
     ),
     
     # Tabset Main Panel
