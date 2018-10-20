@@ -49,6 +49,14 @@ ui <- fluidPage(
       selectInput("type_select",
                   "Request Type",
                   choices = types,
+                  selected = "Potholes"),
+      selectInput("type_select2",
+                  "Request Type",
+                  choices = types,
+                  selected = "Potholes"),
+      selectInput("type_select3",
+                  "Request Type",
+                  choices = types,
                   selected = "Potholes")
     ),
     
@@ -56,10 +64,11 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(
         tabPanel("Line Plot",
-                 plotlyOutput("linePlot")
-        ),
+                 plotlyOutput("linePlot")),
         tabPanel("Open/Closed",
-                 plotlyOutput("barChart"))
+                 plotlyOutput("barChart")),
+        tabPanel("Open/Closed",
+                 plotlyOutput("barChart")),
       )
     )
   )
@@ -108,27 +117,4 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
-
-leaflet() %>%
-  # Set custom view
-  setView(-78.4800, 38.03, 13) %>%
-  # Base Groups ---
-  addTiles(group = "OSM (default)") %>%
-  addProviderTiles("OpenStreetMap.HOT", group = "HOT") %>%
-  addProviderTiles("OpenTopoMap", group = "TopoMap") %>%
-  # Overlay Groups ---
-  # Add clusters of markers for affordable housing units
-  addCircleMarkers(data = housing.units, lng = ~long, lat = ~lat, radius = 2, color = ~pal(type), clusterOptions = markerClusterOptions(), group = "Affordable housing units") %>%
-  # Add legend for circle markers
-  addLegend(position = "topright" , pal = palet, values = housing.units$type, title = "Affordable housing units by type") %>%
-  # Add path connecting selected points of interest
-  addPolylines(data = path.interests, lng = ~long, lat = ~lat, color = "blue", group = "Path of places of interest") %>%
-  # Add census tracts
-  addPolygons(data = tract, fill = F, weight = 3, color = "#444444", group = "Census tracts") %>%
-  # Layers control ---
-  addLayersControl(
-    baseGroups = c("OSM (default)", "HOT", "TopoMap"),
-    overlayGroups = c("Affordable housing units", "Census tracts", "Path of places of interest"),
-    options = layersControlOptions(collapsed = FALSE))
 
