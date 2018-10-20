@@ -126,10 +126,15 @@ server <- function(input, output, session = session) {
   output$map1 <- renderLeaflet({
  #   trees <- loadtrees()
     leaflet() %>%
+      setView(lng = -79.995888, lat = 40.440624, 12.25) %>%
       addProviderTiles(providers$Stamen.TonerLite,
                        options = providerTileOptions(noWrap = TRUE)) %>%
-      addPolygons(data = neighborhoods) %>%
-      addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
+      addPolygons(data = neighborhoods, color = "gray", weight = 1, 
+                  highlight = highlightOptions(
+                    weight = 4, 
+                    color = "#545455", 
+                    bringToFront = TRUE)) %>%
+      addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75, color = "darkgreen", label = ~common_name)
   })  
   
   output$barChart1 <- renderPlotly({
@@ -137,20 +142,19 @@ server <- function(input, output, session = session) {
     ggplotly(
       ggplot(data = treeTops, aes(x = neighborhood, fill = neighborhood)) + 
         geom_bar() +
-        labs(title = "Number of Trees by Neighborhood", x="", y = "") +
-        theme_light() +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1))
-      , tooltip = "")
+        labs(x = "", y = "") +
+        theme_light(axis.text.x = element_text(angle = 90, hjust = 1))
+      )
   })
   output$barChart2 <- renderPlotly({
  #   dat <- loadtrees()
     ggplotly(
       ggplot(data = treeTops, aes(x = common_name, fill = common_name)) + 
         geom_bar() +
-        labs(title = "Name of Trees by Neighborhood", x="", y = "") +
+        labs(x = "", y = "") +
         theme_light() +
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
-      , tooltip = "")
+      )
   })
   # Reset Selection of Data
  # observeEvent(input$reset, {
