@@ -83,7 +83,7 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(tabItems(
   tabItem("maps",
           fluidRow(
-            leafletOutput("map")
+            leafletOutput("map1")
           )
   ),
     tabItem("charts",
@@ -123,11 +123,11 @@ server <- function(input, output, session = session) {
  #   loadtrees <- ckanSQL(url)
  #   return(loadtrees)
  # })
-  output$map <- renderLeaflet({
+  output$map1 <- renderLeaflet({
  #   trees <- loadtrees()
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
-                       options = providerTileOptions(noWrap = TRUE)) #%>%
+                       options = providerTileOptions(noWrap = TRUE)) %>%
       addPolygons(data = neighborhoods) %>%
       addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
   })  
