@@ -48,8 +48,8 @@ sidebar <- dashboardSidebar(
   # bars on the side
   sidebarMenu(
     id = "tabs",
-    menuItem("Plot", icon = icon("bar-chart"), tabName = "map"),
-    menuItem("View Map", icon = icon("map"), tabName = "plot"),
+    menuItem("Map", icon = icon("map"), tabName = "map"),
+    menuItem("Charts", icon = icon("bar-chart"), tabName = "charts"),
     menuItem("Table", icon = icon("table"), tabName = "table"),
     
     selectInput("name_select",
@@ -82,27 +82,20 @@ sidebar <- dashboardSidebar(
 
 body <- dashboardBody(tabItems(
   tabItem("map",
-          fluidPage(
-            box(title = "Map!", DT::dataTableOutput("table"), width = 12))
-        ),
-  tabItem("plot",
           fluidRow(
-            tabBox(title = "Plot",
-                   width = 12,
-                   tabPanel("Number by Neighborhood", plotlyOutput("barChart1")),
-                   tabPanel("Number by Common Name", plotlyOutput("barChart2"))),
-            tabBox(title = "Plot",
-                   width = 12,
-                   tabPanel("Nunmber by Neighborhood", plotlyOutput("barChart1")),
-                   tabPanel("Number by Common Name", plotlyOutput("barChart2")))
-          )
-  ),
+            leafletOutput("map")
+        ),
+  tabItem("charts",
+          fluidRow(
+            tabPanel("Number by Neighborhood", plotlyOutput("barChart1")),
+            tabPanel("Number by Common Name", plotlyOutput("barChart2")))
+        ),
   tabItem("table",
           fluidPage(
-            box(title = "Selected Character Stats", DT::dataTableOutput("table"), width = 12))
+            box(title = "Selected Statistics", DT::dataTableOutput("table"), width = 12))
             )
-          )
-  )
+        )
+  ))
 
 ui <- dashboardPage(header, sidebar, body)
 
