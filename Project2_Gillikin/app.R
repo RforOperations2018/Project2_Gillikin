@@ -89,16 +89,19 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output, session = session) {
-  load311 <- reactive({
+  loadtrees <- reactive({
+    # inputs 
+    types_filter <- ifelse(length(input$neighborhood) > 0, 
+                           paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$neighborhood, collapse = "%27,%27"),"%27)"),
+                           "")
     # Build API Query with proper encodes
     url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%2276fda9d0-69be-4dd5-8108-0de7907fc5a4%22%20WHERE%20%22CREATED_ON%22%20%3E=%20%27", input$dates[1], "%27%20AND%20%22CREATED_ON%22%20%3C=%20%27", input$dates[2], "%27%20AND%20%22REQUEST_TYPE%22%20=%20%27", input$type_select, "%27")
     
     # Load and clean data
-    dat311 <- ckanSQL(url) %>%
-      mutate(date = as.Date(CREATED_ON),
-             STATUS = ifelse(STATUS == 1, "Closed", "Open"))
+    loadtrees <- ckanSQL(url)
+    return(loadtrees)
     
-    return(dat311)
+    trees <- loadtrees()
   })
   output$map <- renderLeaflet({
     leaflet() %>%
@@ -109,7 +112,7 @@ server <- function(input, output, session = session) {
                     weight = 6, 
                     color = "#b9aa7e", 
                     bringToFront = TRUE)) %>%
-      addCircleMarkers(data = housing.units, lng = ~long, lat = ~lat, radius = ~ifelse(type == "single", 4, 8), color = ~palet(type), stroke = FALSE, fillOpacity = .75, label = ~address)
+      addCircleMarkers(data = trees, lng = ~longitude, lat = ~latitude, radius = ~ifelse(type == "single", 4, 8), stroke = FALSE, fillOpacity = .75)
   })  
   
   output$barPlot <- renderPlotly({
