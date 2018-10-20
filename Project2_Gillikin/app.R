@@ -39,8 +39,8 @@ neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/
 #}
 
 #neighborhood <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "neighborhood")$neighborhood)
-#height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
 #condition <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "condition")$condition)
+#height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
 
 header <- dashboardHeader(title = "Pittsburgh's Trees")
 
@@ -52,37 +52,38 @@ sidebar <- dashboardSidebar(
     menuItem("Charts", icon = icon("bar-chart"), tabName = "charts"),
     menuItem("Table", icon = icon("table"), tabName = "table"),
     
-    selectInput("name_select",
+    selectInput("neighbothood_select",
                 "Neighborhood",
                 choices = sort(unique(treeTops$neighborhood)),
                 multiple = TRUE, 
                 selectize = TRUE,
-                selected = c("Greenfield"))
-#      selectInput("condition_select",
-#                  "Condition",
-#                  choices = sort(unique(condition)),
-#                  multiple = TRUE, 
-#                  selectize = TRUE,
-#                  selected = c("Fair")),
-#      selectInput("neighborhood_select",
-#                  "Condition",
-#                  choices = neighborhood,
-#                  selected = "Greenfield",
-#                  multiple = TRUE,
-#                  selectize = TRUE),
+                selected = c("Greenfield")),
+      selectInput("condition_select",
+                  "Tree Condition",
+                  choices = sort(unique(treeTops$condition)),
+                  multiple = TRUE, 
+                  selectize = TRUE,
+                  selected = c("Fair")),
+      selectInput("name_select",
+                  "Common Name",
+                  choices = sort(unique(treeTops$common_name)),
+                  selected = "Maple: Red",
+                  multiple = TRUE,
+                  selectize = TRUE),
 #      sliderInput("height_select",
 #                  "Height",
-#                  min = min(height),
-#                  max = max(height),
-#                  value = c(min(height), max(height))),
-#      actionButton("reset", "Reset Selection", icon = icon("refresh"))
+#                  min = min(treeTops$height),
+#                  max = max(treeTops$height),
+#                  value = c(min(treeTops$height), max(treeTops$height))),
+      hr(),
+      actionButton("reset", "Reset Selection", icon = icon("refresh"))
       
     )
 )
 
 body <- dashboardBody(tabItems(
   tabItem("maps",
-          fluidRow(
+          fluidPage(
             leafletOutput("map1")
           )
   ),
@@ -99,7 +100,7 @@ body <- dashboardBody(tabItems(
             inputPanel(
               downloadButton("downloaddata","Download Data")
             ),
-            box(title = "Selected Stats", DT::dataTableOutput("table"), width = 12))
+            box("Selected Statistics", DT::dataTableOutput("table"), width = 12))
   )
         )
   )
@@ -143,7 +144,8 @@ server <- function(input, output, session = session) {
       ggplot(data = treeTops, aes(x = neighborhood, fill = neighborhood)) + 
         geom_bar() +
         labs(x = "", y = "") +
-        theme_light(axis.text.x = element_text(angle = 90, hjust = 1))
+        theme_light() +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1))
       )
   })
   output$barChart2 <- renderPlotly({
@@ -157,10 +159,12 @@ server <- function(input, output, session = session) {
       )
   })
   # Reset Selection of Data
- # observeEvent(input$reset, {
-  #  updateSelectInput(session, "name_select", selected = c("Greenfield"))
-#    showNotification("Loading...", type = "message")
-#  })
+  observeEvent(input$reset, {
+    updateSelectInput(session, "neighborhood_select", selected = "Greenfield")
+    updateSelectInput(session, "condition_select", selected = "Fair")
+    updateSelectInput(session, "name_select", selected = "Maple: Red")
+    showNotification("Loading...", type = "message")
+  })
   # Datatable
   output$table <- DT::renderDataTable({
     subset(treeTops, select = c("neighborhood", "common_name", "condition"))
