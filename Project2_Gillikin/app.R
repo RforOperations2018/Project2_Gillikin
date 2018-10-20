@@ -109,13 +109,8 @@ server <- function(input, output, session = session) {
   output$map <- renderLeaflet({
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
-                       options = providerTileOptions(noWrap = TRUE)) %>%
-      addPolygons(data = neighborhood, color = "gray", weight = 2, 
-                  highlight = highlightOptions(
-                    weight = 6, 
-                    color = "#b9aa7e", 
-                    bringToFront = TRUE)) %>%
-      addCircleMarkers(data = trees, lng = ~longitude, lat = ~latitude, radius = ~ifelse(type == "single", 4, 8), stroke = FALSE, fillOpacity = .75)
+                       options = providerTileOptions(noWrap = TRUE)) #%>%
+   #   addCircleMarkers(data = common_names, lng = ~longitude, lat = ~latitude, radius = ~ifelse(type == "single", 4, 8), stroke = FALSE, fillOpacity = .75)
   })  
   
   output$barChart1 <- renderPlotly({
