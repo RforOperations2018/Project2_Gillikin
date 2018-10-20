@@ -16,7 +16,7 @@ library(sp)
 treeTops <- read.csv("trees.csv")
 
 # Load PGH neighborhood shapefile
-neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
+#neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
 
 
 ckanSQL <- function(url) {
@@ -36,8 +36,10 @@ ckanUniques <- function(id, field) {
   c(ckanSQL(URLencode(url)))
 }
 
-commonNames <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "common_name")$common_name)
-#neighborhood <- sort(ckanUnique("8d76ac6b-5ae8-4428-82a4-043130d17b02", "neighborhood")$neighborhood)
+neighborhood <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "neighborhood")$neighborhood)
+height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
+condition <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "condition")$condition)
+
 
 # Define UI for application
 ui <- fluidPage(
@@ -49,17 +51,17 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       selectInput("name_select",
-                  "Tree Name",
-                  choices = sort(unique(commonNames)),
+                  "Neighborhood",
+                  choices = sort(unique(neighborhood)),
                   multiple = TRUE, 
                   selectize = TRUE,
-                  selected = c("Maple: Red")),
-#      selectInput("condition_select",
-#                  "Condition",
-#                  choices = sort(unique(condition)),
-#                  multiple = TRUE, 
-#                  selectize = TRUE,
-#                  selected = c("Fair")),
+                  selected = c("Greenfield")),
+      selectInput("condition_select",
+                  "Condition",
+                  choices = sort(unique(condition)),
+                  multiple = TRUE, 
+                  selectize = TRUE,
+                  selected = c("Fair")),
 #      selectInput("neighborhood_select",
 #                  "Condition",
 #                  choices = neighborhood,
@@ -68,7 +70,9 @@ ui <- fluidPage(
 #                  selectize = TRUE),
       sliderInput("height_select",
                   "Height",
-                  min = 0, max = 100, value = 50),
+                  min = min(height),
+                  max = max(height),
+                  value = c(min(height), max(height))),
       actionButton("click", "Refresh")
       
     ),
@@ -112,9 +116,9 @@ server <- function(input, output, session = session) {
   #  trees <- loadtrees()
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
-                       options = providerTileOptions(noWrap = TRUE)) %>%
-      addPolygons(data = neighborhoods) %>%
-      addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
+                       options = providerTileOptions(noWrap = TRUE)) #%>%
+ #     addPolygons(data = neighborhoods) %>%
+ #     addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
   })  
   
   output$barChart1 <- renderPlotly({
@@ -136,11 +140,11 @@ server <- function(input, output, session = session) {
 #  })
   # Datatable
   output$table <- DT::renderDataTable({
-    subset(loadAccount(), select = c("common_name"))
+    subset(loadAccount(), select = c("neighborhood", "common_name", "condition"))
   })
   # Reset Selection of Data
   observeEvent(input$reset, {
-    updateSelectInput(session, "name_select", selected = c("Maple: Red"))
+    updateSelectInput(session, "name_select", selected = c("Greenfield"))
     showNotification("Loading...", type = "message")
   })
   # Download data in the datatable
