@@ -82,9 +82,9 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel("Map",
                  leafletOutput("map")),
-        tabPanel("Neighborhood Number",
+        tabPanel("Trees by Neighborhood Chart",
                  plotlyOutput("barChart1")),
-        tabPanel("Common_name number",
+        tabPanel("Trees by Name Chart",
                  plotlyOutput("barChart2")),
         tabPanel("Table",
                  inputPanel(
@@ -99,22 +99,19 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output, session = session) {
-  loadtrees <- reactive({
+  #loadtrees <- reactive({
     # inputs 
     #types_filter <- ifelse(length(input$name_select) > 0, 
     #                       paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
     #                       "")
     # Build API Query with proper encodes
-    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20
-                  WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27%20
-                  AND%20%22neighborhood%22%20=%20%27", input$name_select, "%27%20
-                  AND%20%22condition%22%20=%20%27", input$condition_select, "%27")
-    print(url)
-    # Load and clean data
-#    loadtrees <- ckanSQL(url)
-#    return(loadtrees)
-
-  })
+    #url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27%20AND%20%22neighborhood%22%20=%20%27", input$name_select, "%27%20AND%20%22condition%22%20=%20%27", input$condition_select, "%27")
+    
+   # print(url)
+    
+    #tree.data <- ckanSQL(url)
+    #return(tree.data)
+ # })
   output$map <- renderLeaflet({
   #  trees <- loadtrees()
     leaflet() %>%
@@ -125,22 +122,25 @@ server <- function(input, output, session = session) {
   })  
   
   output$barChart1 <- renderPlotly({
-    dat <- loadtrees()
+    dat <- treeTops
     ggplotly(
-      ggplot(data = dat, aes(x = common_name)) + 
-        geom_bar(fill = "#8E5572") +
-        labs(title="Six Six Seven") +
+      ggplot(data = dat, aes(x = neighborhood, fill = neighborhood)) + 
+        geom_bar() +
+        labs(title = "Number of Trees by Neighborhood", x="", y = "") +
         theme_light() +
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
       , tooltip = "")
   })
-#  output$lineChart <- renderPlotly({
-#    trees <- loadtrees()
-#    
-#    # draw plot
-#    ggplot(table, aes(x = STATUS, y = count, fill = STATUS)) +
-#      geom_bar(stat = "identity")
-#  })
+  output$barChart1 <- renderPlotly({
+    dat <- treeTops
+    ggplotly(
+      ggplot(data = dat, aes(x = common_name, fill = common_name)) + 
+        geom_bar() +
+        labs(title = "Name of Trees by Neighborhood", x="", y = "") +
+        theme_light() +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      , tooltip = "")
+  })
   # Datatable
   output$table <- DT::renderDataTable({
     subset(loadtrees(), select = c(neighborhood))
