@@ -13,6 +13,7 @@ library(readxl)
 library(stringr)
 library(sp)
 library(httr)
+library(shinydashboard)
 
 treeTops <- read.csv("trees.csv")
 
@@ -41,22 +42,22 @@ neighborhood <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "neighb
 height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
 condition <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "condition")$condition)
 
+header <- dashboardHeader(title = "The Trees of Pittsburgh")
 
-# Define UI for application
-ui <- fluidPage(
-  
-  # Application title
-  titlePanel("The Trees of Pittsburgh"),
-  
-  # Sidebar
-  sidebarLayout(
-    sidebarPanel(
-      selectInput("name_select",
-                  "Neighborhood",
-                  choices = sort(unique(neighborhood)),
-                  multiple = TRUE, 
-                  selectize = TRUE,
-                  selected = c("Greenfield"))
+sidebar <- dashboardSidebar(
+  # bars on the side
+  sidebarMenu(
+    id = "tabs",
+    menuItem("Plot", icon = icon("bar-chart"), tabName = "map"),
+    menuItem("View Map", icon = icon("map"), tabName = "plot"),
+    menuItem("Table", icon = icon("table"), tabName = "table"),
+    
+    selectInput("name_select",
+                "Neighborhood",
+                choices = sort(unique(neighborhood)),
+                multiple = TRUE, 
+                selectize = TRUE,
+                selected = c("Greenfield"))
 #      selectInput("condition_select",
 #                  "Condition",
 #                  choices = sort(unique(condition)),
@@ -76,27 +77,34 @@ ui <- fluidPage(
 #                  value = c(min(height), max(height))),
 #      actionButton("reset", "Reset Selection", icon = icon("refresh"))
       
-    ),
-    
-    # Tabset Main Panel
-    mainPanel(
-      tabsetPanel(
-        tabPanel("Map",
-                 leafletOutput("map")),
-        tabPanel("Trees by Neighborhood Chart",
-                 plotlyOutput("barChart1")),
-        tabPanel("Trees by Name Chart",
-                 plotlyOutput("barChart2")),
-        tabPanel("Table",
-                 inputPanel(
-                   downloadButton("downloadData","Download Tree Data")
-                 ),
-                 fluidPage(DT::dataTableOutput("table"))
-        )
-      )
     )
-  )
 )
+
+body <- dashboardBody(tabItems(
+  tabItem("map",
+          fluidPage(
+            box(title = "Map!", DT::dataTableOutput("table"), width = 12))
+        ),
+  tabItem("plot",
+          fluidRow(
+            tabBox(title = "Plot",
+                   width = 12,
+                   tabPanel("Number by Neighborhood", plotlyOutput("barChart1")),
+                   tabPanel("Number by Common Name", plotlyOutput("barChart2"))),
+            tabBox(title = "Plot",
+                   width = 12,
+                   tabPanel("Nunmber by Neighborhood", plotlyOutput("barChart1")),
+                   tabPanel("Number by Common Name", plotlyOutput("barChart2")))
+          )
+  ),
+  tabItem("table",
+          fluidPage(
+            box(title = "Selected Character Stats", DT::dataTableOutput("table"), width = 12))
+            )
+          )
+  )
+
+ui <- dashboardPage(header, sidebar, body)
 
 # Define server logic
 server <- function(input, output, session = session) {
@@ -122,7 +130,7 @@ server <- function(input, output, session = session) {
   })  
   
   output$barChart1 <- renderPlotly({
-    dat <- loadtrees
+    dat <- loadtrees()
     ggplotly(
       ggplot(data = dat, aes(x = neighborhood, fill = neighborhood)) + 
         geom_bar() +
