@@ -13,6 +13,11 @@ library(readxl)
 library(stringr)
 library(sp)
 
+treeTops <- read.csv("trees.csv")
+
+# Load map data
+neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
+
 
 ckanSQL <- function(url) {
   # Make the Request
@@ -90,27 +95,28 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output, session = session) {
-  loadtrees <- reactive({
-    # inputs 
-    types_filter <- ifelse(length(input$name_select) > 0, 
-                           paste0("%20AND%20%22common_name%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
-                           "")
+ # loadtrees <- reactive({
+#    # inputs 
+#    types_filter <- ifelse(length(input$name_select) > 0, 
+#                           paste0("%20AND%20%22common_name%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
+#                           "")
     # Build API Query with proper encodes
-    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27", types_filter)
+#    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27", types_filter)
     
     # Load and clean data
-    trees <- ckanSQL(url)
-    return(trees)
+#    trees <- ckanSQL(url)
+#    return(trees)
 
-  })
+ # })
   output$map <- renderLeaflet({
-    trees <- loadtrees()
+  #  trees <- loadtrees()
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
                        options = providerTileOptions(noWrap = TRUE)) %>%
-      addCircleMarkers(data = trees, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
+      addPolygons(data = neighborhoods)
+    #  addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
   })  
-  
+  ddddd
   output$barChart1 <- renderPlotly({
     dat <- loadtrees()
     ggplotly(
