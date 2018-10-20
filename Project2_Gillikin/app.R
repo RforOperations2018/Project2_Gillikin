@@ -12,6 +12,7 @@ library(dplyr)
 library(readxl)
 library(stringr)
 library(sp)
+library(httr)
 
 treeTops <- read.csv("trees.csv")
 
@@ -55,25 +56,25 @@ ui <- fluidPage(
                   choices = sort(unique(neighborhood)),
                   multiple = TRUE, 
                   selectize = TRUE,
-                  selected = c("Greenfield")),
-      selectInput("condition_select",
-                  "Condition",
-                  choices = sort(unique(condition)),
-                  multiple = TRUE, 
-                  selectize = TRUE,
-                  selected = c("Fair")),
+                  selected = c("Greenfield"))
+#      selectInput("condition_select",
+#                  "Condition",
+#                  choices = sort(unique(condition)),
+#                  multiple = TRUE, 
+#                  selectize = TRUE,
+#                  selected = c("Fair")),
 #      selectInput("neighborhood_select",
 #                  "Condition",
 #                  choices = neighborhood,
 #                  selected = "Greenfield",
 #                  multiple = TRUE,
 #                  selectize = TRUE),
-      sliderInput("height_select",
-                  "Height",
-                  min = min(height),
-                  max = max(height),
-                  value = c(min(height), max(height))),
-      actionButton("reset", "Reset Selection", icon = icon("refresh"))
+#      sliderInput("height_select",
+#                  "Height",
+#                  min = min(height),
+#                  max = max(height),
+#                  value = c(min(height), max(height))),
+#      actionButton("reset", "Reset Selection", icon = icon("refresh"))
       
     ),
     
@@ -101,16 +102,15 @@ ui <- fluidPage(
 server <- function(input, output, session = session) {
   loadtrees <- reactive({
     # inputs 
-    #types_filter <- ifelse(length(input$name_select) > 0, 
-    #                       paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
-    #                       "")
+    types_filter <- ifelse(length(input$name_select) > 0, 
+                           paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
+                           "")
     # Build API Query with proper encodes
-    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27%20AND%20%22neighborhood%22%20=%20%27", input$name_select, "%27%20AND%20%22condition%22%20=%20%27", input$condition_select, "%27")
+    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20=%20%27", input$height_select, "%27")
+
     
-    print(url)
-    
-    tree.data <- ckanSQL(url)
-    return(tree.data)
+    loadtrees <- ckanSQL(url)
+    return(loadtrees)
   })
   output$map <- renderLeaflet({
     trees <- loadtrees()
@@ -122,7 +122,7 @@ server <- function(input, output, session = session) {
   })  
   
   output$barChart1 <- renderPlotly({
-    dat <- loadtrees()
+    dat <- loadtrees
     ggplotly(
       ggplot(data = dat, aes(x = neighborhood, fill = neighborhood)) + 
         geom_bar() +
@@ -132,7 +132,7 @@ server <- function(input, output, session = session) {
       , tooltip = "")
   })
   output$barChart2 <- renderPlotly({
-    dat <- treeTops
+    dat <- loadtrees()
     ggplotly(
       ggplot(data = dat, aes(x = common_name, fill = common_name)) + 
         geom_bar() +
