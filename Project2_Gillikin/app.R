@@ -37,7 +37,7 @@ violations <- sort(ckanUniques("1a1329e2-418c-4bd3-af2c-cc334e7559af", "REQUEST_
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Pittsburgh Restaurant Inspection Violations"),
+  titlePanel("The Trees of Pittsburgh"),
   
   # Sidebar
   sidebarLayout(
