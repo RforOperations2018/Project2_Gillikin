@@ -43,19 +43,27 @@ ui <- fluidPage(
   # Sidebar
   sidebarLayout(
     sidebarPanel(
-      dateRangeInput("date",
-                     "Inspection Date Range",
-                     start = Sys.Date()-30,
-                     end = Sys.Date()),
-
-      checkboxGroupInput("type", "Violation Type", 
-                         choices = list(" Low risk violation" = 1, " Medium risk violation" = 2, " High risk violation" = 3),
-                         selected = 1)
-      
-      common_name
-      height
-      condition
-      neighborhood
+      selectInput("name_select",
+                  "Common Name",
+                  choices = common_name,
+                  selected = "Maple: Red",
+                  multiple = TRUE),
+      selectInput("condition_select",
+                  "Condition",
+                  choices = condition_select,
+                  selected = "Fair",
+                  multiple = TRUE),
+      selectInput("neighborhood_select",
+                  "Condition",
+                  choices = neighborhood_select,
+                  selected = "Greenfield",
+                  multiple = TRUE),
+      sliderInput("height_select",
+                  "Height",
+                  choices = height_select,
+                  selected = "Fair",
+                  multiple = TRUE),
+      actionButton("click", "Refresh")
       
     ),
     
@@ -65,12 +73,12 @@ ui <- fluidPage(
         tabPanel("Map",
                  leafletOutput("map")),
         tabPanel("Neighborhood Number",
-                 plotlyOutput("barChart")),
+                 plotlyOutput("barChart1")),
         tabPanel("Common_name number",
-                 plotlyOutput("barChart")),
+                 plotlyOutput("barChart2")),
         tabPanel("Table",
                  inputPanel(
-                   downloadButton("downloadData","Download Revenue/Expense Data")
+                   downloadButton("downloadData","Download Tree Data")
                  ),
                  fluidPage(DT::dataTableOutput("table"))
         )
