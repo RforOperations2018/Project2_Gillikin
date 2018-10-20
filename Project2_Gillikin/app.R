@@ -99,30 +99,30 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output, session = session) {
-  #loadtrees <- reactive({
+  loadtrees <- reactive({
     # inputs 
     #types_filter <- ifelse(length(input$name_select) > 0, 
     #                       paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
     #                       "")
     # Build API Query with proper encodes
-    #url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27%20AND%20%22neighborhood%22%20=%20%27", input$name_select, "%27%20AND%20%22condition%22%20=%20%27", input$condition_select, "%27")
+    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27%20AND%20%22neighborhood%22%20=%20%27", input$name_select, "%27%20AND%20%22condition%22%20=%20%27", input$condition_select, "%27")
     
-   # print(url)
+    print(url)
     
-    #tree.data <- ckanSQL(url)
-    #return(tree.data)
- # })
+    tree.data <- ckanSQL(url)
+    return(tree.data)
+  })
   output$map <- renderLeaflet({
-  #  trees <- loadtrees()
+    trees <- loadtrees()
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
                        options = providerTileOptions(noWrap = TRUE)) #%>%
  #     addPolygons(data = neighborhoods) %>%
- #     addCircleMarkers(data = loadtrees(), lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
+      addCircleMarkers(data = loadtrees(), lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
   })  
   
   output$barChart1 <- renderPlotly({
-    dat <- treeTops
+    dat <- loadtrees()
     ggplotly(
       ggplot(data = dat, aes(x = neighborhood, fill = neighborhood)) + 
         geom_bar() +
@@ -131,7 +131,7 @@ server <- function(input, output, session = session) {
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
       , tooltip = "")
   })
-  output$barChart1 <- renderPlotly({
+  output$barChart2 <- renderPlotly({
     dat <- treeTops
     ggplotly(
       ggplot(data = dat, aes(x = common_name, fill = common_name)) + 
