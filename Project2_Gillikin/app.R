@@ -15,7 +15,7 @@ library(sp)
 
 treeTops <- read.csv("trees.csv")
 
-# Load map data
+# Load PGH neighborhood shapefile
 neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
 
 
@@ -113,10 +113,10 @@ server <- function(input, output, session = session) {
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
                        options = providerTileOptions(noWrap = TRUE)) %>%
-      addPolygons(data = neighborhoods)
-    #  addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
+      addPolygons(data = neighborhoods) %>%
+      addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
   })  
-  ddddd
+  
   output$barChart1 <- renderPlotly({
     dat <- loadtrees()
     ggplotly(
