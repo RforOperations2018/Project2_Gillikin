@@ -58,14 +58,14 @@ ui <- fluidPage(
         tabPanel("Map",
                  leafletOutput("map")),
         tabPanel("Municiple",
-                 plotlyOutput("barChart"),
+                 plotlyOutput("barChart")),
         tabPanel("Over time",
                  plotlyOutput("linePlot")),
         tabPanel("Table",
                  inputPanel(
                    downloadButton("downloadData","Download Revenue/Expense Data")
                  ),
-                 fluidPage(DT::dataTableOutput("table")))
+                 fluidPage(DT::dataTableOutput("table"))
         )
       )
     )
