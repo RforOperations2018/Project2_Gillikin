@@ -109,19 +109,20 @@ ui <- dashboardPage(header, sidebar, body)
 # Define server logic
 server <- function(input, output, session = session) {
   treeTops <- reactive({
-#    if (length(input$name_select) > 0) {
-#      treeTops <- subset(treeTops, treeTops$neighborhood %in% input$name_select)
-#    }
+   # if (length(input$neighborhood_select) > 0) {
+  #    treeTops <- subset(treeTops, neighborhood %in% input$neighborhood_select)
+  #  }
     # inputs 
     #types_filter <- ifelse(length(input$name_select) > 0, 
     #                       paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
     #                       "")
-    # Build API Query with proper encodes
-  #  url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20=%20%27", input$height_select, "%27")
+   # Build API Query with proper encodes
+    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20
+                  WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27%20AND%20%22neighborhood%22%20=%20%27", input$neighborhood_select, "%27%20AND%20%22common_name%22%20=%20%27", input$name_select, "%27%20AND%20%22condition%22%20=%20%27", input$condition_select, "%27") 
 
     
- #   loadtrees <- ckanSQL(url)
- #   return(loadtrees)
+    treeTops <- ckanSQL(url)
+    return(treeTops)
   })
   output$map1 <- renderLeaflet({
     dat <- treeTops()
