@@ -15,37 +15,37 @@ library(sp)
 library(httr)
 library(shinydashboard)
 
-treeTops <- read.csv("trees.csv")
 
-# Load PGH neighborhood shapefile
+treeTops <- read.csv("trees.csv")
 neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
 palet <- colorFactor(topo.colors(5), treeTops$common_names)
 
-#ckanSQL <- function(url) {
-#  # Make the Request
-#  r <- RETRY("GET", URLencode(url))
-#  # Extract Content
-#  c <- content(r, "text")
-#  # Basic gsub to make NA's consistent with R
-#  json <- gsub('NaN', 'NA', c, perl = TRUE)
-#  # Create Dataframe
-#  data.frame(jsonlite::fromJSON(json)$result$records)
-#}
+ckanSQL <- function(url) {
+  # Make the Request
+  r <- RETRY("GET", URLencode(url))
+  # Extract Content
+  c <- content(r, "text")
+  # Basic gsub to make NA's consistent with R
+  json <- gsub('NaN', 'NA', c, perl = TRUE)
+  # Create Dataframe
+  data.frame(jsonlite::fromJSON(json)$result$records)
+}
 
 # Unique values for Resource Field
-#ckanUniques <- function(id, field) {
-#  url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20DISTINCT(%22", field, "%22)%20from%20%22", id, "%22")
-#  c(ckanSQL(URLencode(url)))
-#}
+ckanUniques <- function(id, field) {
+  url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20DISTINCT(%22", field, "%22)%20from%20%22", id, "%22")
+  c(ckanSQL(URLencode(url)))
+}
 
-#neighborhood <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "neighborhood")$neighborhood)
-#condition <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "condition")$condition)
-#height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
+neighborhood <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "neighborhood")$neighborhood)
+common_name <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "common_name")$common_name)
+condition <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "condition")$condition)
+height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
 
 header <- dashboardHeader(title = "Pittsburgh's Trees")
 
 sidebar <- dashboardSidebar(
-  # bars on the side
+
   sidebarMenu(
     id = "tabs",
     menuItem("Map", icon = icon("map"), tabName = "maps"),
@@ -58,18 +58,18 @@ sidebar <- dashboardSidebar(
                 multiple = TRUE, 
                 selectize = TRUE,
                 selected = c("Greenfield")),
-    selectInput("condition_select",
-                  "Tree Condition",
-                choices = sort(unique(treeTops$condition)),
-                multiple = TRUE, 
-                selectize = TRUE,
-                selected = c("Fair")),
     selectInput("name_select",
                 "Common Name",
                 choices = sort(unique(treeTops$common_name)),
                 selected = "Maple: Red",
                 multiple = TRUE,
                 selectize = TRUE),
+    selectInput("condition_select",
+                "Tree Condition",
+                choices = sort(unique(treeTops$condition)),
+                multiple = TRUE, 
+                selectize = TRUE,
+                selected = c("Fair")),
     sliderInput("height_select",
                 "Height",
                 min = 0,
@@ -108,7 +108,7 @@ ui <- dashboardPage(header, sidebar, body)
 
 # Define server logic
 server <- function(input, output, session = session) {
- # loadtrees <- reactive({
+  treeTops <- reactive({
 #    if (length(input$name_select) > 0) {
 #      treeTops <- subset(treeTops, treeTops$neighborhood %in% input$name_select)
 #    }
@@ -122,9 +122,9 @@ server <- function(input, output, session = session) {
     
  #   loadtrees <- ckanSQL(url)
  #   return(loadtrees)
- # })
+  })
   output$map1 <- renderLeaflet({
- #   trees <- loadtrees()
+    dat <- treeTops()
     leaflet() %>%
       setView(lng = -79.995888, lat = 40.440624, 12.25) %>%
       addProviderTiles(providers$Stamen.TonerLite,
@@ -133,13 +133,12 @@ server <- function(input, output, session = session) {
                   highlight = highlightOptions(
                     weight = 4, 
                     color = "#545455",
-                    fill = "violet",
                     bringToFront = TRUE)) %>%
-      addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75, color = ~palet(common_name), label = ~common_name)
+      addCircleMarkers(data = dat, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75, color = ~palet(common_name), label = ~common_name)
   })  
   
   output$barChart1 <- renderPlotly({
-#    dat <- loadtrees()
+    dat <- treeTops()
     ggplotly(
       ggplot(data = treeTops, aes(x = neighborhood, fill = neighborhood)) + 
         geom_bar() +
@@ -149,7 +148,7 @@ server <- function(input, output, session = session) {
       )
   })
   output$barChart2 <- renderPlotly({
- #   dat <- loadtrees()
+    dat <- treeTops()
     ggplotly(
       ggplot(data = treeTops, aes(x = common_name, fill = common_name)) + 
         geom_bar() +
@@ -161,8 +160,8 @@ server <- function(input, output, session = session) {
   # Reset Selection of Data
   observeEvent(input$reset, {
     updateSelectInput(session, "neighborhood_select", selected = "Greenfield")
-    updateSelectInput(session, "condition_select", selected = "Fair")
     updateSelectInput(session, "name_select", selected = "Maple: Red")
+    updateSelectInput(session, "condition_select", selected = "Fair")
     updateSliderInput(session, "height_select", value = c(0, max(na.omit(treeTops$height))))
     showNotification("Loading...", type = "message")
   })
