@@ -15,10 +15,10 @@ library(sp)
 library(httr)
 library(shinydashboard)
 
-
-treeTops <- read.csv("trees.csv")
+# Load PGH neighborhood shapefiles
 neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
-palet <- colorFactor(topo.colors(5), treeTops$common_names)
+# Set pallette for map
+palet <- colorFactor(topo.colors(5), common_names)
 
 ckanSQL <- function(url) {
   # Make the Request
@@ -42,6 +42,7 @@ common_name <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "common_
 condition <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "condition")$condition)
 height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
 
+#Dashboard sections
 header <- dashboardHeader(title = "Pittsburgh's Trees")
 
 sidebar <- dashboardSidebar(
@@ -61,7 +62,7 @@ sidebar <- dashboardSidebar(
     selectInput("name_select",
                 "Common Name",
                 choices = sort(unique(common_name)),
-                selected = "Maple: Red",
+                selected = c("Maple: Red"),
                 multiple = TRUE,
                 selectize = TRUE),
     selectInput("condition_select",
@@ -106,25 +107,23 @@ body <- dashboardBody(tabItems(
 
 ui <- dashboardPage(header, sidebar, body)
 
+# Note before going into the reactive part of the server: When I run it with the .csv of the data, everything runs. 
+# When I try to make any single part reactive, nothing works. Obviously, when I try to make everything reactive and pulled from the API, nothing works. 
+
 # Define server logic
 server <- function(input, output, session = session) {
   treeTops <- reactive({
-    if (length(input$neighborhood_select) > 0) {
-      treeTops <- subset(treeTops, neighborhood %in% input$neighborhood_select)
-    }
-    # inputs 
-    #types_filter <- ifelse(length(input$name_select) > 0, 
-    #                       paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
-    #                       "")
    # Build API Query with proper encodes
     url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20%3E=%20%27", input$height_select[1], "%27%20AND%20%22height%22%20%3C=%20%27", input$height_select[2], "%27%20AND%20%22neighborhood%22%20=%20%27", input$neighborhood_select, "%27%20AND%20%22common_name%22%20=%20%27", input$name_select, "%27%20AND%20%22condition%22%20=%20%27", input$condition_select, "%27") 
 
     treeTops <- ckanSQL(url)
     return(treeTops)
   })
+  # Map of trees by neighborhood, colored by name
   output$map1 <- renderLeaflet({
     dat <- treeTops()
     leaflet() %>%
+      # Once reactive, no need for setView()
       setView(lng = -79.995888, lat = 40.440624, 12.25) %>%
       addProviderTiles(providers$Stamen.TonerLite,
                        options = providerTileOptions(noWrap = TRUE)) %>%
@@ -135,7 +134,7 @@ server <- function(input, output, session = session) {
                     bringToFront = TRUE)) %>%
       addCircleMarkers(data = dat, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75, color = ~palet(common_name), label = ~common_name)
   })  
-  
+  # Chart of number of trees in each neighborhood
   output$barChart1 <- renderPlotly({
     dat <- treeTops()
     ggplotly(
@@ -146,6 +145,7 @@ server <- function(input, output, session = session) {
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
       )
   })
+  # Chart of number of each tree name
   output$barChart2 <- renderPlotly({
     dat <- treeTops()
     ggplotly(
@@ -180,4 +180,3 @@ server <- function(input, output, session = session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
