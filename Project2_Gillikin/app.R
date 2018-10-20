@@ -21,26 +21,26 @@ treeTops <- read.csv("trees.csv")
 #neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
 
 
-ckanSQL <- function(url) {
-  # Make the Request
-  r <- RETRY("GET", URLencode(url))
-  # Extract Content
-  c <- content(r, "text")
-  # Basic gsub to make NA's consistent with R
-  json <- gsub('NaN', 'NA', c, perl = TRUE)
-  # Create Dataframe
-  data.frame(jsonlite::fromJSON(json)$result$records)
-}
+#ckanSQL <- function(url) {
+#  # Make the Request
+#  r <- RETRY("GET", URLencode(url))
+#  # Extract Content
+#  c <- content(r, "text")
+#  # Basic gsub to make NA's consistent with R
+#  json <- gsub('NaN', 'NA', c, perl = TRUE)
+#  # Create Dataframe
+#  data.frame(jsonlite::fromJSON(json)$result$records)
+#}
 
 # Unique values for Resource Field
-ckanUniques <- function(id, field) {
-  url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20DISTINCT(%22", field, "%22)%20from%20%22", id, "%22")
-  c(ckanSQL(URLencode(url)))
-}
+#ckanUniques <- function(id, field) {
+#  url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20DISTINCT(%22", field, "%22)%20from%20%22", id, "%22")
+#  c(ckanSQL(URLencode(url)))
+#}
 
-neighborhood <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "neighborhood")$neighborhood)
-height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
-condition <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "condition")$condition)
+#neighborhood <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "neighborhood")$neighborhood)
+#height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
+#condition <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "condition")$condition)
 
 header <- dashboardHeader(title = "Pittsburgh's Trees")
 
@@ -48,13 +48,13 @@ sidebar <- dashboardSidebar(
   # bars on the side
   sidebarMenu(
     id = "tabs",
-    menuItem("Map", icon = icon("map"), tabName = "map"),
+    menuItem("Map", icon = icon("map"), tabName = "maps"),
     menuItem("Charts", icon = icon("bar-chart"), tabName = "charts"),
     menuItem("Table", icon = icon("table"), tabName = "table"),
     
     selectInput("name_select",
                 "Neighborhood",
-                choices = sort(unique(neighborhood)),
+                choices = sort(unique(treeTops$neighborhood)),
                 multiple = TRUE, 
                 selectize = TRUE,
                 selected = c("Greenfield"))
@@ -81,7 +81,7 @@ sidebar <- dashboardSidebar(
 )
 
 body <- dashboardBody(tabItems(
-  tabItem("map",
+  tabItem("maps",
           fluidRow(
             leafletOutput("map")
           )
@@ -105,31 +105,34 @@ ui <- dashboardPage(header, sidebar, body)
 
 # Define server logic
 server <- function(input, output, session = session) {
-  loadtrees <- reactive({
+ # loadtrees <- reactive({
+#    if (length(input$name_select) > 0) {
+#      treeTops <- subset(treeTops, treeTops$neighborhood %in% input$name_select)
+#    }
     # inputs 
     #types_filter <- ifelse(length(input$name_select) > 0, 
     #                       paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
     #                       "")
     # Build API Query with proper encodes
-    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20=%20%27", input$height_select, "%27")
+  #  url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20=%20%27", input$height_select, "%27")
 
     
-    loadtrees <- ckanSQL(url)
-    return(loadtrees)
-  })
+ #   loadtrees <- ckanSQL(url)
+ #   return(loadtrees)
+ # })
   output$map <- renderLeaflet({
-    trees <- loadtrees()
+ #   trees <- loadtrees()
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
                        options = providerTileOptions(noWrap = TRUE)) #%>%
  #     addPolygons(data = neighborhoods) %>%
-      addCircleMarkers(data = loadtrees(), lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
+      addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75)
   })  
   
   output$barChart1 <- renderPlotly({
-    dat <- loadtrees()
+#    dat <- loadtrees()
     ggplotly(
-      ggplot(data = dat, aes(x = neighborhood, fill = neighborhood)) + 
+      ggplot(data = treeTops, aes(x = neighborhood, fill = neighborhood)) + 
         geom_bar() +
         labs(title = "Number of Trees by Neighborhood", x="", y = "") +
         theme_light() +
@@ -137,9 +140,9 @@ server <- function(input, output, session = session) {
       , tooltip = "")
   })
   output$barChart2 <- renderPlotly({
-    dat <- loadtrees()
+ #   dat <- loadtrees()
     ggplotly(
-      ggplot(data = dat, aes(x = common_name, fill = common_name)) + 
+      ggplot(data = treeTops, aes(x = common_name, fill = common_name)) + 
         geom_bar() +
         labs(title = "Name of Trees by Neighborhood", x="", y = "") +
         theme_light() +
@@ -148,21 +151,21 @@ server <- function(input, output, session = session) {
   })
   # Datatable
   output$table <- DT::renderDataTable({
-    subset(loadtrees(), select = c(neighborhood))
+    subset(treeTops, select = c(neighborhood, common_name, condition))
   })
   # Reset Selection of Data
-  observeEvent(input$reset, {
-    updateSelectInput(session, "name_select", selected = c("Greenfield"))
-    showNotification("Loading...", type = "message")
-  })
+ # observeEvent(input$reset, {
+  #  updateSelectInput(session, "name_select", selected = c("Greenfield"))
+#    showNotification("Loading...", type = "message")
+#  })
   # Download data in the datatable
-  output$downloadData <- downloadHandler(
-    filename = function() {
-      paste("trees-", Sys.Date(), ".csv", sep="")
-    },
-    content = function(file) {
-      write.csv(loadtrees(), file)
-    })
+#  output$downloadData <- downloadHandler(
+#    filename = function() {
+#      paste("trees-", Sys.Date(), ".csv", sep="")
+#    },
+#    content = function(file) {
+#      write.csv(loadtrees(), file)
+#    })
 }
 
 # Run the application 
