@@ -73,7 +73,7 @@ ui <- fluidPage(
                   min = min(height),
                   max = max(height),
                   value = c(min(height), max(height))),
-      actionButton("click", "Refresh")
+      actionButton("reset", "Reset Selection", icon = icon("refresh"))
       
     ),
     
@@ -143,7 +143,7 @@ server <- function(input, output, session = session) {
 #  })
   # Datatable
   output$table <- DT::renderDataTable({
-    subset(loadtrees(), select = c(neighborhood, common_name, condition))
+    subset(loadtrees(), select = c(neighborhood))
   })
   # Reset Selection of Data
   observeEvent(input$reset, {
