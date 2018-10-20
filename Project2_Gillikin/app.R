@@ -50,6 +50,12 @@ ui <- fluidPage(
       checkboxGroupInput("type", "Violation Type", 
                          choices = list(" Low risk violation" = 1, " Medium risk violation" = 2, " High risk violation" = 3),
                          selected = 1)
+      
+      common_name
+      height
+      condition
+      neighborhood
+      
     ),
     
     # Tabset Main Panel
@@ -57,10 +63,10 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel("Map",
                  leafletOutput("map")),
-        tabPanel("Municiple",
+        tabPanel("Neighborhood Number",
                  plotlyOutput("barChart")),
-        tabPanel("Violations over time",
-                 plotlyOutput("linePlot")),
+        tabPanel("Common_name number",
+                 plotlyOutput("barChart")),
         tabPanel("Table",
                  inputPanel(
                    downloadButton("downloadData","Download Revenue/Expense Data")
