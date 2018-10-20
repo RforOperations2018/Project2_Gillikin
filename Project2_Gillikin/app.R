@@ -31,7 +31,7 @@ ckanUniques <- function(id, field) {
   c(ckanSQL(URLencode(url)))
 }
 
-trees <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "common_name")$common_name)
+common_names <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "common_name")$common_name)
 #neighborhood <- sort(ckanUnique("8d76ac6b-5ae8-4428-82a4-043130d17b02", "neighborhood")$neighborhood)
 
 # Define UI for application
@@ -43,7 +43,30 @@ ui <- fluidPage(
   # Sidebar
   sidebarLayout(
     sidebarPanel(
-
+      selectInput("name_select",
+                  "Tree Name",
+                  choices = sort(unique(common_names)),
+                  multiple = TRUE, 
+                  selectize = TRUE,
+                  selected = c("Maple: Red", "Lilac: Japanese Tree")),
+#      selectInput("condition_select",
+#                  "Condition",
+#                  choices = sort(unique(condition)),
+#                  multiple = TRUE, 
+#                  selectize = TRUE,
+#                  selected = c("Fair")),
+#      selectInput("neighborhood_select",
+#                  "Condition",
+#                  choices = neighborhood,
+#                  selected = "Greenfield",
+#                  multiple = TRUE,
+#                  selectize = TRUE),
+#      sliderInput("height_select",
+#                  "Height",
+#                  choices = height,
+#                  selected = "Fair",
+#                  multiple = TRUE),
+      actionButton("click", "Refresh")
       
     ),
     
@@ -71,9 +94,9 @@ ui <- fluidPage(
 server <- function(input, output, session = session) {
   loadtrees <- reactive({
     # inputs 
-    #types_filter <- ifelse(length(input$neighborhood) > 0, 
-    #                       paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$neighborhood, collapse = "%27,%27"),"%27)"),
-    #                       "")
+    name_select <- ifelse(length(input$common_name) > 0, 
+                           paste0("%20AND%20%22common_name%22%20IN%20(%27", paste(input$common_name, collapse = "%27,%27"),"%27)"),
+                           "")
     # Build API Query with proper encodes
     url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22common_name%22%20%3E=%20%27", input$name_select, "%27")
     
