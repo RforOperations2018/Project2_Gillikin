@@ -42,7 +42,7 @@ neighborhood <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "neighb
 height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
 condition <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "condition")$condition)
 
-header <- dashboardHeader(title = "The Trees of Pittsburgh")
+header <- dashboardHeader(title = "Pittsburgh's Trees")
 
 sidebar <- dashboardSidebar(
   # bars on the side
@@ -84,18 +84,22 @@ body <- dashboardBody(tabItems(
   tabItem("map",
           fluidRow(
             leafletOutput("map")
-        ),
-  tabItem("charts",
-          fluidRow(
-            tabPanel("Number by Neighborhood", plotlyOutput("barChart1")),
-            tabPanel("Number by Common Name", plotlyOutput("barChart2")))
-        ),
+          )
+  ),
+    tabItem("charts",
+          fluidPage(
+            tabBox(title = "Plot",
+                   width = 12,
+                   tabPanel("Number by Neighborhood", plotlyOutput("barChart1")),
+                   tabPanel("Number by Common Name", plotlyOutput("barChart2")))
+          )
+  ),
   tabItem("table",
           fluidPage(
-            box(title = "Selected Statistics", DT::dataTableOutput("table"), width = 12))
-            )
+            box(title = "Selected Stats", DT::dataTableOutput("table"), width = 12))
+  )
         )
-  ))
+  )
 
 ui <- dashboardPage(header, sidebar, body)
 
@@ -103,9 +107,9 @@ ui <- dashboardPage(header, sidebar, body)
 server <- function(input, output, session = session) {
   loadtrees <- reactive({
     # inputs 
-    types_filter <- ifelse(length(input$name_select) > 0, 
-                           paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
-                           "")
+    #types_filter <- ifelse(length(input$name_select) > 0, 
+    #                       paste0("%20AND%20%22neighborhood%22%20IN%20(%27", paste(input$name_select, collapse = "%27,%27"),"%27)"),
+    #                       "")
     # Build API Query with proper encodes
     url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%1515a93c-73e3-4425-9b35-1cd11b2196da%22%20WHERE%20%22height%22%20=%20%27", input$height_select, "%27")
 
