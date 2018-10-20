@@ -52,7 +52,7 @@ sidebar <- dashboardSidebar(
     menuItem("Charts", icon = icon("bar-chart"), tabName = "charts"),
     menuItem("Table", icon = icon("table"), tabName = "table"),
     
-    selectInput("neighbothood_select",
+    selectInput("neighborhood_select",
                 "Neighborhood",
                 choices = sort(unique(treeTops$neighborhood)),
                 multiple = TRUE, 
@@ -132,7 +132,8 @@ server <- function(input, output, session = session) {
       addPolygons(data = neighborhoods, color = "gray", weight = 1, 
                   highlight = highlightOptions(
                     weight = 4, 
-                    color = "#545455", 
+                    color = "#545455",
+                    fill = "violet",
                     bringToFront = TRUE)) %>%
       addCircleMarkers(data = treeTops, lng = ~longitude, lat = ~latitude, radius = 2, stroke = FALSE, fillOpacity = .75, color = ~palet(common_name), label = ~common_name)
   })  
