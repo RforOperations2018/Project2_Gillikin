@@ -18,6 +18,7 @@ library(shinydashboard)
 # Load PGH neighborhood shapefiles
 neighborhoods <- rgdal::readOGR("http://pghgis-pittsburghpa.opendata.arcgis.com/datasets/dbd133a206cc4a3aa915cb28baa60fd4_0.geojson")
 # Set pallette for map
+# This has to be AFTER you've created the common_names type this is breaking your app... It's also named wrong
 palet <- colorFactor(topo.colors(5), common_names)
 
 ckanSQL <- function(url) {
@@ -38,7 +39,7 @@ ckanUniques <- function(id, field) {
 }
 
 neighborhood <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "neighborhood")$neighborhood)
-common_name <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "common_name")$common_name)
+common_names <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "common_name")$common_name)
 condition <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "condition")$condition)
 height <- sort(ckanUniques("1515a93c-73e3-4425-9b35-1cd11b2196da", "height")$height)
 
